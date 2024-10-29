@@ -1,2 +1,11 @@
+
 .parrotalk
 secret.py
+
+.venv/
+.DS_Store
+.env
+__pycache__
+
+ChatBotData.csv
+
