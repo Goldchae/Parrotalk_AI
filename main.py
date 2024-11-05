@@ -9,7 +9,7 @@ app = FastAPI()
 
 # 문장 데이터를 위한 Pydantic 모델 정의
 class DialogueRequest(BaseModel):
-    room_number: int
+    room_number: str
     sentence: str
 
 @app.get("/health")
