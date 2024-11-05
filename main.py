@@ -15,7 +15,7 @@ class DialogueRequest(BaseModel):
 async def health_check():
     return {"message": "Hello ParroTalk!"}
 
-@app.post("/recommendations/")
+@app.post("/recommendations")
 async def get_recommendations(request: DialogueRequest):
     # 입력된 문장을 처리하여 추천 문장 3개 생성
     result = generate_sentence(request.sentence.strip())
@@ -27,13 +27,15 @@ async def get_recommendations(request: DialogueRequest):
     # 추천 문장을 JSON 형식으로 반환
     analysis_result = {
         "dialogue": request.sentence.strip(),
-        "추천 문장 1": result.get('추천 문장 1', 'N/A'),
-        "추천 문장 2": result.get('추천 문장 2', 'N/A'),
-        "추천 문장 3": result.get('추천 문장 3', 'N/A'),
+        "recommendations": [
+            result.get('추천 문장 1', 'N/A'),
+            result.get('추천 문장 2', 'N/A'),
+            result.get('추천 문장 3', 'N/A')
+        ]
     }
     
-    return {"recommendations": analysis_result}
+    return analysis_result
 
-# if __name__ == "__main__":
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8080)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)
