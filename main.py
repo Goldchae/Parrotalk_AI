@@ -10,13 +10,14 @@ app = FastAPI()
 
 # 문장 데이터를 위한 Pydantic 모델 정의
 class DialogueRequest(BaseModel):
+    room_number: str
     sentence: str
 
 @app.get("/health")
 async def health_check():
     return {"message": "Hello ParroTalk!"}
 
-@app.post("/recommendations/")
+@app.post("/recommendations")
 async def get_recommendations(request: DialogueRequest):
     try:
         # 입력된 문장을 처리하여 추천 문장 3개 생성
@@ -28,13 +29,16 @@ async def get_recommendations(request: DialogueRequest):
 
         # 추천 문장을 JSON 형식으로 반환
         analysis_result = {
+            "room_number": request.room_number,
             "dialogue": request.sentence.strip(),
-            "추천 문장 1": result.get('추천 문장 1', 'N/A'),
-            "추천 문장 2": result.get('추천 문장 2', 'N/A'),
-            "추천 문장 3": result.get('추천 문장 3', 'N/A'),
+            "recommendations": [
+                result.get('추천 문장 1', 'N/A'),
+                result.get('추천 문장 2', 'N/A'),
+                result.get('추천 문장 3', 'N/A')
+            ]
         }
-        
-        return {"recommendations": analysis_result}
+
+        return analysis_result
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating recommendations: {str(e)}")
@@ -55,6 +59,7 @@ async def summarize_dialogue(request: DialogueRequest):
         "summary": summary_result['summary'],
         "todo": summary_result['todo']
     }
+
 
 if __name__ == "__main__":
     import uvicorn
