@@ -9,6 +9,7 @@ app = FastAPI()
 
 # 문장 데이터를 위한 Pydantic 모델 정의
 class DialogueRequest(BaseModel):
+    room_number: int
     sentence: str
 
 @app.get("/health")
@@ -26,6 +27,7 @@ async def get_recommendations(request: DialogueRequest):
     
     # 추천 문장을 JSON 형식으로 반환
     analysis_result = {
+        "room_number": request.room_number,
         "dialogue": request.sentence.strip(),
         "recommendations": [
             result.get('추천 문장 1', 'N/A'),
