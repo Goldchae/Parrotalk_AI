@@ -11,7 +11,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # 템플릿 문자열 정의
 template_string = """
-작업: 두명이 대화하는 상황에서 다음은 문장에 답변하는 문장 3개를 반환해라.
+작업: 대화하는 상황에서 문맥을 파악하여 문장단위 기준 맨 마지막 문장에 대한 답변하는 문장 3개를 반환해라.
 
 추천 문장 1: 첫번째 문장
 추천 문장 2: 두번쨰 문장
@@ -53,3 +53,5 @@ def generate_sentence(dialogue_content):
         # 오류가 발생할 경우 로깅
         print(f"OpenAI API 호출 중 오류 발생: {e}")
         return None
+    
+#print(generate_sentence('오늘 날씨 춥더라'))
