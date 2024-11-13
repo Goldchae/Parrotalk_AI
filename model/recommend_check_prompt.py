@@ -11,18 +11,17 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # 템플릿 문자열 정의
 template_string = """
-작업: 대화하는 상황에서 문맥을 파악하여 문장단위 기준 맨 마지막 문장에 대한 답변하는 문장 3개를 반환해라.
-
-추천 문장 1: 첫번째 문장
-추천 문장 2: 두번쨰 문장
-추천 문장 3: 세번째 문장
+작업: 다음은 상대방의 문장이다. 다음문장에 대하여 답변가능여부를 판단하세요.
 
 
-대화 내용: {text}
+답변가능한 문장이면 True를 반환
+
+check_sentence: True/False
+excuse: 이유
+sentence: {text}
 """
 
-def generate_sentence(dialogue_content):
-    # 템플릿 문자열을 대화 내용으로 완성
+def recommend_check(dialogue_content):
     prompt = template_string.format(text=dialogue_content)
 
     try:
@@ -41,17 +40,32 @@ def generate_sentence(dialogue_content):
             response_format = {"type":"json_object"}
         )
 
-        # 응답 메시지를 추출
+        # 응답 메시지를 JSON으로 추출
         customer_response = response.choices[0].message.content
 
-        # JSON 형식으로 파싱
-        output_dict = json.loads(customer_response)
+        # JSON 응답 파싱하여 추천 여부 추출
+        try:
+            response_json = json.loads(customer_response)
+            output = response_json.get("check_sentence", False)
+            output2 = response_json.get("excuse", False)
+            # return response_json
+            return output
+            #return output, output2
+        
+        except json.JSONDecodeError:
+            print("응답을 JSON으로 파싱하는 데 실패했습니다.")
+            output = False
 
-        return output_dict
+        return output
 
     except Exception as e:
         # 오류가 발생할 경우 로깅
         print(f"OpenAI API 호출 중 오류 발생: {e}")
         return None
     
-#print(generate_sentence('오늘 날씨 춥더라'))
+    
+#sentence='나는 오늘 학교에 갔다.'
+#sentence='나는'
+#sentence='배고파 나는 오늘 학교에 갔다 근데 점심이 쏘야였어. 너의 학교 점심은 뭐였어'
+# sentence="밥 먹을래"
+# print(recommend_check(sentence))
