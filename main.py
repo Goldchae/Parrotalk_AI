@@ -98,7 +98,7 @@ async def summarize_dialogue(request: DialogueRequest):
     }
 
 # Text-to-Speech API 엔드포인트
-@app.post("/synthesize")
+@app.post("/tts")
 async def synthesize_tts(request: TTSRequest):
     try:
         # Google TTS 호출
