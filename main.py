@@ -1,12 +1,10 @@
-import sys
-import os
-sys.path.append(os.path.abspath('model/'))
-import uuid
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from chatgpt_prompting import generate_sentence
-from summary_dialogue_prompt import summary_dialogue
-from recommend_check_prompt import recommend_check
+from model.chatgpt_prompting import generate_sentence
+from model.summary_dialogue_prompt import summary_dialogue
+from model.recommend_check_prompt import recommend_check
+from tts_model.google_tts import synthesize_speech_base64
+
 
 app = FastAPI()
 
@@ -19,7 +17,14 @@ total_conversation_cache = []  # 전체 대화를 누적할 캐시
 class DialogueRequest(BaseModel):
     room_number: str
     sentence: str
-    
+
+# TTS 요청 바디 스키마 정의
+class TTSRequest(BaseModel):
+    room_number: str
+    voice_type: str
+    text: str
+
+
 @app.get("/health")
 async def health_check():
     return {"message": "Hello ParroTalk!"}
@@ -91,7 +96,18 @@ async def summarize_dialogue(request: DialogueRequest):
         "todo": summary_result['todo']
     }
 
-
+# Text-to-Speech API 엔드포인트
+@app.post("/synthesize")
+async def synthesize_tts(request: TTSRequest):
+    try:
+        # Google TTS 호출
+        audio_base64 = synthesize_speech_base64(request.voice_type, request.text)
+        return {"status": "success", "audio_base64": audio_base64}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
