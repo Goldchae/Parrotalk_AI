@@ -3,5 +3,4 @@
 .env
 __pycache__
 myenv
-
-ChatBotData.csv
+stt-test-key.json
