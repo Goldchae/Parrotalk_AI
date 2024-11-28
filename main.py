@@ -1,3 +1,4 @@
+from typing import Literal
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from model.chatgpt_prompting import generate_sentence
@@ -21,7 +22,7 @@ class DialogueRequest(BaseModel):
 # TTS 요청 바디 스키마 정의
 class TTSRequest(BaseModel):
     room_number: str
-    voice_type: str
+    voice_type: Literal["male1", "male2", "female1", "female2"]
     text: str
 
 
