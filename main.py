@@ -10,9 +10,8 @@ from tts_model.google_tts import synthesize_speech_base64
 app = FastAPI()
 
 # 캐시 딕셔너리
-cache = []  # 캐시는 리스트 형태로 선언합니다.
-request_counter = 0  # 초기 카운터 값
-total_conversation_cache = []  # 전체 대화를 누적할 캐시
+cache = {}  # {"room_number": ["문장1", "문장2"]}
+total_conversation_cache = {}  # {"room_number": ["전체 문장1", "전체 문장2"]}
 
 # 문장 데이터를 위한 Pydantic 모델 정의
 class DialogueRequest(BaseModel):
@@ -25,61 +24,68 @@ class TTSRequest(BaseModel):
     voice_type: Literal["male1", "male2", "female1", "female2"]
     text: str
 
-
 @app.get("/health")
 async def health_check():
     return {"message": "Hello ParroTalk!"}
 
 # 캐시에 문장 추가 (중복 확인)
-def add_sentence_to_cache(sentence: str):
-    if not cache or cache[-1] != sentence:  # 중복된 문장 추가 방지
-        cache.append(sentence)
-    total_conversation_cache.append(sentence)  # 전체 대화 누적 캐시에 추가
+def add_sentence_to_cache(room_number: str, sentence: str):
+    # 캐시 초기화
+    if room_number not in cache:
+        cache[room_number] = []
+    if room_number not in total_conversation_cache:
+        total_conversation_cache[room_number] = []
+    
+    # 중복된 문장 추가 방지
+    if not cache[room_number] or cache[room_number][-1] != sentence:
+        cache[room_number].append(sentence)
+    
+    # 전체 대화 누적 캐시에 추가
+    total_conversation_cache[room_number].append(sentence)
 
 @app.post("/recommendations")
 async def get_recommendations(request: DialogueRequest):
-    global request_counter
     sentence = request.sentence.strip()
+    room_number = request.room_number
 
     try:
         # 문장 캐시에 추가
-        add_sentence_to_cache(sentence)
+        add_sentence_to_cache(room_number, sentence)
 
-        # 캐시에 저장된 모든 문장을 합쳐서 추천 여부 판단
-        combined_text = " ".join(cache)
-        total_combined_text = " ".join(total_conversation_cache)  # 전체 누적 대화 텍스트
+        # 룸 넘버별 캐시에서 문장 조합
+        combined_text = " ".join(cache[room_number])
+        total_combined_text = " ".join(total_conversation_cache[room_number])  # 전체 누적 대화 텍스트
 
+        # 추천 여부 판단
         is_recommend_combined = recommend_check(combined_text)
 
         if is_recommend_combined:
-            # 추천 가능하면 캐시를 비우고 request_id 갱신
-            request_counter += 1
-            cache.clear()
+            # 추천 가능하면 캐시를 비우고 결과 반환
+            cache[room_number].clear()
 
             # 추천 실행 (전체 누적 문장 활용)
-            result = generate_sentence(total_combined_text)  # 여기에서 전체 누적 문장을 집어넣는다
+            result = generate_sentence(total_combined_text)
             return {
-                "room_number": request.room_number,
+                "room_number": room_number,
                 "sentence": total_combined_text,
                 "is_recommend": True,
                 "recommendations": [
                     result.get('추천 문장 1', []),
                     result.get('추천 문장 2', []),
                     result.get('추천 문장 3', [])
-                ],
-                #"request_id": request_counter
+                ]
             }
         else:
             # 추천 불가능하면 결합된 문장만 반환
             return {
-                "room_number": request.room_number,
+                "room_number": room_number,
                 "sentence": combined_text,
                 "is_recommend": False,
                 "recommendations": []
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error checking recommendation: {str(e)}")
-    
+
 @app.post("/summary")
 async def summarize_dialogue(request: DialogueRequest):
     dialogue_content = request.sentence.strip()
