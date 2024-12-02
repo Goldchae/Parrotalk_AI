@@ -1,3 +1,4 @@
+# 베이스 모델 테스트
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering
 import torch
 
