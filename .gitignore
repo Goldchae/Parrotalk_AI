@@ -1,2 +1,7 @@
 .parrotalk
+<<<<<<< HEAD
 secret.py
+=======
+secret.pyresult/
+results/
+>>>>>>> origin/newBranch
