@@ -1,7 +1,9 @@
 # 성능 평가 파이프라인
 import json
 import LLM_evalution_score
-import base_model_answer
+#import base_model_answer
+#import fineTuning_model_answer
+import gpt_model_answer
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "false" # 콘솔창 더럽게 만드는 경고 메세지 삭!제!
 
@@ -20,7 +22,9 @@ with open(file_path, "r", encoding="utf-8") as file:
         validate_data["question"] = data["question"]
 
         # 베이스 모델 응답
-        model_answer = base_model_answer.get_base_model_answer(data["context"], data["question"])
+        # model_answer = base_model_answer.get_base_model_answer(data["context"], data["question"])
+        # model_answer = fineTuning_model_answer.get_fineTuning_model_answer(data["context"], data["question"])
+        model_answer = gpt_model_answer.get_gpt_model_answer(data["context"], data["question"])
         validate_data["answer"] = model_answer
         print("model_answer : " + model_answer)
 
@@ -37,6 +41,8 @@ with open(file_path, "r", encoding="utf-8") as file:
 
 
 
-output_file = "base_model_validation.json"
+# output_file = "base_model_validation.json"
+# output_file = "fineTuning_model_validation.json"
+output_file = "gpt_model_validation.json"
 with open(output_file, "w", encoding="utf-8") as file:
     json.dump(validate_datas, file, ensure_ascii=False, indent=4)
